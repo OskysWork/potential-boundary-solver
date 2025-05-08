@@ -38,31 +38,70 @@ def influence_coefficient(panel_j, panel_i):
      y_local = dx*np.sin(phi) + dy*np.cos(phi)
      L = panel_j.length
 
-     a1_ij = (
+     a0_ij = (
           (1 / (4 * np.pi)) *
-          np.log((x_local**2 + y_local**2) / ((x_local - L_**2 + y_local**2)))
+          np.log((x_local**2 + y_local**2) / ((x_local - L**2 + y_local**2)))
      )
-     a2_ij = (
+     a1_ij = (
           (1 / (2*np.pi)) * (
                (x_local / 2) *
-               np.log((x_local**2 + y_local**2) / ((x_local - L_**2 + y_local**2))) -
+               np.log((x_local**2 + y_local**2) / ((x_local - L**2 + y_local**2))) -
                L +
                y_local * (np.atan2(x_local / y_local) - np.atan2((x_local - L) / y_local))
           )
      )
 
-     return a1_ij, a2_ij
+     return a0_ij, a1_ij
 
 
 def influence_matrix(panels):
-     """
-     Creates the full matrix of influence coefficients
-     """
+    """
+    Creates the full matrix of influence coefficients
+    """
 
-     N = len(panels)
-     A = np.zeros((2*N, 2*N))
-     b = np.zeros(2*N)
+    N = len(panels)
+    A = np.zeros((2*N, 2*N))
+    b = np.zeros(2*N)
+    for i, panel_i in enumerate(panels):
+        for j, panel_j in enumerate(panels):
+            a0_ij, a1_ij = influence_coefficient(panel_j, panel_i)
+            A[i, 2*j] = a0_ij
+            A[i, 2*j+1] = a1_ij
+    
+    # Panel strength continuity
+    for j in range(N-1):
+        row = N + j
+        A[row, 2*j] = 1.0
+        A[row, 2*j+1] = panels[j].length
+        A[row, 2*(j+1)] = -1.0
+        b[row] = 0.0
+    
+    row = N + (N-1)
+    A[row, 2*(N-1)] = 1.0
+    A[row, 2*(N-1)+1] = panels[-1].length
+    A[row, 0] = -1.0
+    b[row] = 0.0
 
-     for i, panel_i in enumerate(panels):
-          for j, panel_j in enumerate((panels)):
-               I0, I1 = 
+    return A, b
+
+
+def solve_panels(panels, U_free=1.0, alpha=0.0);
+    """
+    Solves system of equations to give panel vortext strengths
+    """
+
+    N = len(panels)
+    A, b = influence_matrix(panels)
+
+    for i, panel_i in enumerate(panels):
+        nx = np.sin(panel_i.beta)
+        ny = -np.cos(panel_i.beta)
+        b[i] = -U_free * (nx * np.cos(alpha) + ny * np.sin(alpha))
+
+    gamma = np.linalg.solve(A, b)
+
+    for j, panel in enumerate(panels):
+        panel.gamma_0 = gamma[2*j]
+        panel.gamma_1 = gamma[2*j+1]
+
+    return panels
