@@ -112,3 +112,21 @@ def solve_panels(panels, U_free=1.0, alpha=0.0):
         panel.gamma_1 = gamma[2*j+1]
 
     return panels
+
+def compute_cp(panels, U_free=1.0, alpha=0.0):
+    """
+    Computes xp and Cp from panel strengths
+    """
+    
+    xp = []
+    Cp = []
+
+    for panel in panels:
+        xp.append(panel.xc)
+
+        gamma_mean = panel.gamma_0 + panel.gamma_1 * (panel.length / 2)
+        Vt = U_free * np.sin(alpha - panel.beta) + 0.5 * gamma_mean
+        Cp_panel = 1.0 - (Vt / U_free)**2
+        Cp.append(Cp_panel)
+
+    return xp, Cp
