@@ -5,13 +5,11 @@ import matplotlib.pyplot as plt
 Troubleshoot notes:
 
 - Identified +-inf in i-1 u velocity profiles (start of range(1, Ny-1))
-- Setup counter n1, n2, n3, etc... for each variable and conditional stop
-  for != nan or inf on counter to += 1 the counter
-  Print each n right after and compare for smallest n at end of output
+- From about count 19 there is inf error, values leading to are very large
 """
 
 Nx = 200
-Ny = 200
+Ny = 20000
 delta0 = 0.001
 L = 0.05
 
@@ -29,6 +27,16 @@ v = np.zeros((Nx, Ny))
 nut = np.zeros((Nx, Ny))
 mut = np.zeros((Nx, Ny))
 
+n1 = 0
+n1s = True
+n2 = 0
+n2s = True
+n3 = 0
+n3s = True
+n4 = 0
+n4s = True
+count = 0
+
 for j in range(Ny):
     eta = y[j]/delta0
     u[0, j] = 1.5 * eta - 0.5 * eta**3 if eta<1 else 1
@@ -36,6 +44,8 @@ for j in range(Ny):
 
 for i in range(1, Nx):
     delta = delta0 + 0.005 * x[i]     # Placeholder layer growth relation
+    count+=1
+    print(count)
 
     for j in range(Ny):
         eta = y[j] / delta
@@ -44,6 +54,7 @@ for i in range(1, Nx):
 
     for j in range(1, Ny-1):
         du_dy = (u[i-1, j+1] - u[i-1, j-1]) / (2*dy)
+
         d2u_dy2 = (u[i-1, j+1] - 2*u[i-1, j] + u[i-1, j-1]) / (dy)**2
 
         visc_term = (mu + mut[i-1, j])*d2u_dy2 + (
@@ -63,3 +74,7 @@ for i in range(1, Nx):
     for j in reversed(range(1, Ny)):
         du_dx = (u[i, j] - u[i-1, j]) / dx
         v[i, j-1] = v[i, j] - dy * du_dx
+
+
+plt.plot(y, u[0, :])
+plt.show()
