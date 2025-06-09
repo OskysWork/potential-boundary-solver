@@ -8,15 +8,18 @@ Troubleshoot notes:
 - From about count 19 there is inf error, values leading to are very large
 """
 
-Nx = 200
-Ny = 200
-delta0 = 0.001
-L = 0.05
+Nx = 160000
+Ny = 80
+delta0 = 0.05
+L = 0.4
 
 x = np.linspace(0, L, Nx)
-y = np.linspace(0, delta0, Ny)
-dx = L / (Nx-1)         # i.e: dx = x[1] - x[0]
-dy = delta0 / (Ny-1)    # i.e: dy = y[1] - y[0]
+y = delta0 * (np.tanh(2 * np.linspace(0, 1, Ny)) / np.tanh(2))
+#y = np.linspace(0, delta0, Ny)
+dx = x[1] - x[0]
+print(dx)
+dy = y[1] - y[0]
+print(dy**2)
 
 rho = 1
 mu = 1.95*1e-5
@@ -27,14 +30,6 @@ v = np.zeros((Nx, Ny))
 nut = np.zeros((Nx, Ny))
 mut = np.zeros((Nx, Ny))
 
-n1 = 0
-n1s = True
-n2 = 0
-n2s = True
-n3 = 0
-n3s = True
-n4 = 0
-n4s = True
 count = 0
 
 for j in range(Ny):
@@ -45,7 +40,7 @@ for j in range(Ny):
 for i in range(1, Nx):
     delta = delta0 + 0.005 * x[i]     # Placeholder layer growth relation
     count+=1
-    print(count)
+    #print(count)
 
     for j in range(Ny):
         eta = y[j] / delta
@@ -77,4 +72,19 @@ for i in range(1, Nx):
 
 
 plt.plot(y, u[0, :])
+plt.show(block=False)
+plt.plot(y, u[10, :])
+plt.show(block=False)
+plt.plot(y, u[100, :])
+plt.show(block=False)
+plt.plot(y, u[1000, :])
+plt.show(block=False)
+plt.plot(y, u[10000, :], label='1')
+plt.show(block=False)
+plt.plot(y, u[20000, :], label='2')
+plt.show(block=False)
+plt.plot(y, u[30000, :], label='3')
+plt.xlabel('y position')
+plt.ylabel('Velocity distribution')
+plt.legend()
 plt.show()
