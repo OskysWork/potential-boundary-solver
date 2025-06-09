@@ -9,7 +9,7 @@ Troubleshoot notes:
 """
 
 Nx = 200
-Ny = 20000
+Ny = 200
 delta0 = 0.001
 L = 0.05
 
