@@ -9,7 +9,7 @@ Troubleshoot notes:
 """
 
 Nx = 160000
-Ny = 80
+Ny = 40
 delta0 = 0.05
 L = 0.4
 
@@ -23,12 +23,13 @@ print(dy**2)
 
 rho = 1
 mu = 1.95*1e-5
-dp_dx = 0
+dp_dx = 0#0.01*1e5
 
 u = np.zeros((Nx, Ny))
 v = np.zeros((Nx, Ny))
 nut = np.zeros((Nx, Ny))
 mut = np.zeros((Nx, Ny))
+kappa = 0.41
 
 count = 0
 
@@ -38,13 +39,15 @@ for j in range(Ny):
 
 
 for i in range(1, Nx):
-    delta = delta0 + 0.005 * x[i]     # Placeholder layer growth relation
+    #delta = delta0 + 0.005 * x[i]     # Placeholder layer growth relation
+    delta = delta0 + np.sqrt(x[i]*mu*rho)
     count+=1
     #print(count)
 
     for j in range(Ny):
         eta = y[j] / delta
         nut[i-1, j] = 0.01 * (eta*(1-eta)) if eta<1 else 0
+        #nut[i-1, j] = 0.01*delta*(kappa/6)*(1-(1-eta)**2)*(1+2*(1-eta)**2)
         mut[i-1, j] = rho * nut[i-1, j]
 
     for j in range(1, Ny-1):
@@ -70,21 +73,34 @@ for i in range(1, Nx):
         du_dx = (u[i, j] - u[i-1, j]) / dx
         v[i, j-1] = v[i, j] - dy * du_dx
 
-
-plt.plot(y, u[0, :])
+plt.figure()
+plt.plot(u[0, :], y)
 plt.show(block=False)
-plt.plot(y, u[10, :])
+plt.plot(u[10, :], y)
 plt.show(block=False)
-plt.plot(y, u[100, :])
+plt.plot(u[100, :], y)
 plt.show(block=False)
-plt.plot(y, u[1000, :])
+plt.plot(u[1000, :], y)
 plt.show(block=False)
-plt.plot(y, u[10000, :], label='1')
+plt.plot(u[10000, :], y, label='1')
 plt.show(block=False)
-plt.plot(y, u[20000, :], label='2')
+plt.plot(u[40000, :], y, label='4')
 plt.show(block=False)
-plt.plot(y, u[30000, :], label='3')
-plt.xlabel('y position')
-plt.ylabel('Velocity distribution')
+plt.plot(u[80000-1, :], y, label='8')
+plt.show(block=False)
+plt.plot(u[160000-1, :], y, label='16')
+plt.title("Boundary Layer 40y (with y and delta functions + 0.01bar)")
+plt.ylabel('y position')
+plt.xlabel('Velocity distribution')
 plt.legend()
+plt.show()
+
+X, Y = np.meshgrid(x, y)
+plt.figure(figsize=(8, 4))
+plt.contourf(X, Y, u.T, levels=50, cmap="viridis")
+plt.colorbar(label="u [m/s]")
+plt.xlabel("x [m]")
+plt.ylabel("y [m]")
+plt.title("Velocity field u(x, y)")
+plt.tight_layout()
 plt.show()
