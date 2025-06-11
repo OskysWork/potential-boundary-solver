@@ -44,11 +44,16 @@ for i in range(1, Nx):
     count+=1
     #print(count)
 
+    """
     for j in range(Ny):
         eta = y[j] / delta
         nut[i-1, j] = 0.01 * (eta*(1-eta)) if eta<1 else 0
         #nut[i-1, j] = 0.01*delta*(kappa/6)*(1-(1-eta)**2)*(1+2*(1-eta)**2)
         mut[i-1, j] = rho * nut[i-1, j]
+    """
+    eta = y / delta
+    nut[i-1, :] = np.where(eta < 1, 0.01 * (eta*(1-eta)), 0)
+    mut[i-1, :] = rho * nut[i-1, :]
 
     for j in range(1, Ny-1):
         du_dy = (u[i-1, j+1] - u[i-1, j-1]) / (2*dy)
@@ -72,6 +77,9 @@ for i in range(1, Nx):
     for j in reversed(range(1, Ny)):
         du_dx = (u[i, j] - u[i-1, j]) / dx
         v[i, j-1] = v[i, j] - dy * du_dx
+
+
+
 
 plt.figure()
 plt.plot(u[0, :], y)
@@ -104,3 +112,4 @@ plt.ylabel("y [m]")
 plt.title("Velocity field u(x, y)")
 plt.tight_layout()
 plt.show()
+

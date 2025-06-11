@@ -83,6 +83,7 @@ C_plus_D_exp = 5
 
 # Solutions
 C_plus_D = np.log(A)/kappa - 1.5
+dC_plus_D_dA= 1/(A*kappa)
 A_exp = np.exp(kappa*(C_plus_D_exp + 1.5))
 
 
@@ -91,6 +92,7 @@ plt.figure()
 plt.title(r"$C^+$ vs A")
 plt.plot(A, C_plus_D)
 plt.plot(A_exp, C_plus_D_exp, 'ro', label=fr'Experimental $C^+$ ≈ {C_plus_D_exp:.2f} at A = {A_exp:.4f}')
+plt.plot(A, dC_plus_D_dA, label=fr'd$C^+$/dA')
 plt.xlabel('A')
 plt.ylabel('C+')
 plt.legend()
@@ -106,6 +108,15 @@ Spalding
 # Constants
 log_const = 5
 E = np.exp(-kappa*log_const)
+up = np.linspace(0, 15, 100)
+yp = up + (np.exp(kappa * up) - 1 - kappa * up - (kappa * up)**2 / 2 - (kappa * up)**3 / 6)*E
+
+plt.figure()
+plt.plot(yp, up)
+plt.title("Spalding's Law of the Wall")
+plt.xlabel("y+")
+plt.ylabel("u+")
+plt.show()
 
 def residual_function(u_plus, y_plus):
     """
