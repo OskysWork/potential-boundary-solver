@@ -2,35 +2,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-"""
-Troubleshoot notes:
-
-- Identified +-inf in i-1 u velocity profiles (start of range(1, Ny-1))
-- From about count 19 there is inf error, values leading to are very large
-"""
 
 Nx = 160000
 Ny = 80
 delta0 = 0.05
-L = 0.4 
+L = 0.4
 
 x = np.linspace(0, L, Nx)
 y = delta0 * (np.tanh(2 * np.linspace(0, 1, Ny)) / np.tanh(2))
 #y = np.linspace(0, delta0, Ny)
 dx = x[1] - x[0]
 print(dx)
-dy = y[1] - y[0]
-print(dy**2)
+#dy = y[1] - y[0]
+dy = [y[j+1]-y[j-1] if 0<j<(Ny-1) else y[-1]-y[-2] for j in range(Ny)]
+dy[0] = y[1] - y[0]
+#dy = [(y[j+1] - y[j-1]) / 2 if 0 < j < Ny-1 else (y[1] - y[0]) if j == 0 else (y[-1] - y[-2]) for j in range(Ny)]
+print(dy[0]**2)
+print(dy)
 
 rho = 1
 mu = 1.95*1e-5
 nu = mu / rho
-dp_dx = 0#0.01*1e5
+dp_dx = 0.01#0.0001*1e5
 
 u = np.zeros((Nx, Ny))
 v = np.zeros((Nx, Ny))
 nut = np.zeros((Nx, Ny))
 mut = np.zeros((Nx, Ny))
+dudy = np.zeros((Nx, Ny))
 kappa = 0.41
 
 count = 0
@@ -38,6 +37,9 @@ count = 0
 for j in range(Ny):
     eta = y[j]/delta0
     u[0, j] = 1.5 * eta - 0.5 * eta**3 if eta<1 else 1
+
+for j in range(0,Ny-1):
+    dudy[0, j] = (u[0, j+1] - u[0, j-1]) / (2*dy[j])
 
 
 for i in tqdm(range(1, Nx)):
@@ -48,16 +50,18 @@ for i in tqdm(range(1, Nx)):
 
 
     eta = y / delta
-    nut[i-1, :] = np.where(eta < 1, 0.01 * (eta*(1-eta)), 0)
+    nut[i-1, :] = np.where(eta < 1, 0.02 * (eta*(1-eta)), 0)        #Changed from 0.01
+    #nut[i-1, :] = (kappa*y[1:])
     mut[i-1, :] = rho * nut[i-1, :]
 
     for j in range(1, Ny-1):
-        du_dy = (u[i-1, j+1] - u[i-1, j-1]) / (2*dy)
+        du_dy = (u[i-1, j+1] - u[i-1, j-1]) / (2*dy[j])
+        #dudy[i, j] = du_dy
 
-        d2u_dy2 = (u[i-1, j+1] - 2*u[i-1, j] + u[i-1, j-1]) / (dy)**2
+        d2u_dy2 = (u[i-1, j+1] - 2*u[i-1, j] + u[i-1, j-1]) / (dy[j])**2
 
         visc_term = (mu + mut[i-1, j])*d2u_dy2 + (
-            (mut[i-1, j+1] - mut[i-1, j-1])/(2*dy)
+            (mut[i-1, j+1] - mut[i-1, j-1])/(2*dy[j])
             ) * du_dy
         
         du_dx = (
@@ -72,11 +76,12 @@ for i in tqdm(range(1, Nx)):
     v[i, -1] = 0
     for j in reversed(range(1, Ny)):
         du_dx = (u[i, j] - u[i-1, j]) / dx
-        v[i, j-1] = v[i, j] - dy * du_dx
+        v[i, j-1] = v[i, j] - dy[j] * du_dx
 
-dudy_w = (u[100, 1] - u[100, 0]) / dy
+dudy_w = (u[100, 1] - u[100, 0]) / dy[0]
 tau_w = mu*dudy_w
 u_tau = np.sqrt(tau_w / rho)
+print(u_tau)
 
 y_plus = y*u_tau / nu
 x_plus = u[100, :] / u_tau
