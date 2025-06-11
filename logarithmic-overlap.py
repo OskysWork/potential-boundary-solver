@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.optimize import root_scalar
+from scipy.integrate import quad
 
 """
 # Equation writing:
@@ -19,6 +21,7 @@ s.pprint(eq2)
 
 # Universal variables:
 kappa = 0.41
+
 
 """
 Gersten and Herwig (1992) p.406
@@ -93,6 +96,59 @@ plt.ylabel('C+')
 plt.legend()
 plt.grid(True)
 plt.show()
+
+
+"""
+Spalding
+### Scrappy code
+"""
+
+# Constants
+log_const = 5
+E = np.exp(-kappa*log_const)
+
+def residual_function(u_plus, y_plus):
+    """
+	Defines residual func
+    """
+    # Example: Spalding's equation
+    f_u = u_plus + (np.exp(kappa * u_plus) - 1 - kappa * u_plus - (kappa * u_plus)**2 / 2 - (kappa * u_plus)**3 / 6)*E
+    return f_u - y_plus  # Residual = LHS - RHS
+
+
+def dudy_plus_ansatz(u_plus):
+    """
+	Defines rearranged Spalding's gradient ansatz
+    """
+    numerator = kappa * np.exp(kappa * u_plus) - kappa - kappa**2 * u_plus - 0.5 * kappa**3 * u_plus**2
+    derivative = 1 + numerator*E
+    return 1 / derivative
+
+
+def solve_u_plus(y_plus):
+    sol = root_scalar(residual_function, args=(y_plus,), bracket=[0, 30], method='brentq')
+    return sol.root
+
+
+def integrand_1(y_plus):
+    u_plus = solve_u_plus(y_plus)
+    return dudy_plus_ansatz(u_plus)
+
+
+def integrand_2(y_plus):
+    u_plus = solve_u_plus(y_plus)
+    return dudy_plus_ansatz(u_plus) - 1 / (kappa * y_plus)
+
+
+y_plus_max = 10000
+
+
+integral_1, _ = quad(integrand_1, 0, 1)
+integral_2, _ = quad(integrand_2, 1, y_plus_max)
+
+
+C_plus = integral_1 + integral_2
+print(C_plus)
 
 
 
