@@ -44,13 +44,7 @@ for i in range(1, Nx):
     count+=1
     #print(count)
 
-    """
-    for j in range(Ny):
-        eta = y[j] / delta
-        nut[i-1, j] = 0.01 * (eta*(1-eta)) if eta<1 else 0
-        #nut[i-1, j] = 0.01*delta*(kappa/6)*(1-(1-eta)**2)*(1+2*(1-eta)**2)
-        mut[i-1, j] = rho * nut[i-1, j]
-    """
+
     eta = y / delta
     nut[i-1, :] = np.where(eta < 1, 0.01 * (eta*(1-eta)), 0)
     mut[i-1, :] = rho * nut[i-1, :]
