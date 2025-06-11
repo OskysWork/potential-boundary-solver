@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 """
 Troubleshoot notes:
@@ -9,9 +10,9 @@ Troubleshoot notes:
 """
 
 Nx = 160000
-Ny = 40
+Ny = 80
 delta0 = 0.05
-L = 0.4
+L = 0.4 
 
 x = np.linspace(0, L, Nx)
 y = delta0 * (np.tanh(2 * np.linspace(0, 1, Ny)) / np.tanh(2))
@@ -23,6 +24,7 @@ print(dy**2)
 
 rho = 1
 mu = 1.95*1e-5
+nu = mu / rho
 dp_dx = 0#0.01*1e5
 
 u = np.zeros((Nx, Ny))
@@ -38,7 +40,7 @@ for j in range(Ny):
     u[0, j] = 1.5 * eta - 0.5 * eta**3 if eta<1 else 1
 
 
-for i in range(1, Nx):
+for i in tqdm(range(1, Nx)):
     #delta = delta0 + 0.005 * x[i]     # Placeholder layer growth relation
     delta = delta0 + np.sqrt(x[i]*mu*rho)
     count+=1
@@ -72,7 +74,12 @@ for i in range(1, Nx):
         du_dx = (u[i, j] - u[i-1, j]) / dx
         v[i, j-1] = v[i, j] - dy * du_dx
 
+dudy_w = (u[100, 1] - u[100, 0]) / dy
+tau_w = mu*dudy_w
+u_tau = np.sqrt(tau_w / rho)
 
+y_plus = y*u_tau / nu
+x_plus = u[100, :] / u_tau
 
 
 plt.figure()
@@ -95,6 +102,14 @@ plt.title("Boundary Layer 40y (with y and delta functions + 0.01bar)")
 plt.ylabel('y position')
 plt.xlabel('Velocity distribution')
 plt.legend()
+plt.show(block=False)
+
+plt.figure()
+plt.plot(y_plus, x_plus)
+plt.xscale('log')
+plt.title('Plot for x=100')
+plt.xlabel('y+')
+plt.ylabel('u+')
 plt.show()
 
 X, Y = np.meshgrid(x, y)
