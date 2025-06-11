@@ -2,12 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-"""
-Troubleshoot notes:
-
-- Identified +-inf in i-1 u velocity profiles (start of range(1, Ny-1))
-- From about count 19 there is inf error, values leading to are very large
-"""
 
 Nx = 160000
 Ny = 80
