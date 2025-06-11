@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from joblib import Parallel, delayed
 
 """
 Troubleshoot notes:
@@ -37,38 +38,41 @@ for j in range(Ny):
     eta = y[j]/delta0
     u[0, j] = 1.5 * eta - 0.5 * eta**3 if eta<1 else 1
 
+def compute_march(j, u_prev, v_prev, mut_prev, dp_dx, rho, mu, dy, dx):
+    du_dy = (u_prev[j+1] - u_prev[j-1]) / (2*dy)
+
+    d2u_dy2 = (u_prev[j+1] - 2*u_prev[j] + u_prev[j-1]) / (dy)**2
+
+    visc_term = (mu + mut_prev[j])*d2u_dy2 + (
+        (mut_prev[j+1] - mut_prev[j-1])/(2*dy)
+        ) * du_dy
+        
+    du_dx = (
+        (visc_term - dp_dx)/rho - v_prev[j]*du_dy
+        )/u_prev[j] if abs(u_prev[j]) > 1e-8 else 0
+
+    return u_prev[j] + dx * du_dx
+
 
 for i in range(1, Nx):
     #delta = delta0 + 0.005 * x[i]     # Placeholder layer growth relation
     delta = delta0 + np.sqrt(x[i]*mu*rho)
     count+=1
-    #print(count)
 
-    """
-    for j in range(Ny):
-        eta = y[j] / delta
-        nut[i-1, j] = 0.01 * (eta*(1-eta)) if eta<1 else 0
-        #nut[i-1, j] = 0.01*delta*(kappa/6)*(1-(1-eta)**2)*(1+2*(1-eta)**2)
-        mut[i-1, j] = rho * nut[i-1, j]
-    """
     eta = y / delta
     nut[i-1, :] = np.where(eta < 1, 0.01 * (eta*(1-eta)), 0)
     mut[i-1, :] = rho * nut[i-1, :]
 
-    for j in range(1, Ny-1):
-        du_dy = (u[i-1, j+1] - u[i-1, j-1]) / (2*dy)
+    u_prev = u[i-1, :]
+    v_prev = v[i-1, :]
+    mut_prev = mut[i-1, :]
 
-        d2u_dy2 = (u[i-1, j+1] - 2*u[i-1, j] + u[i-1, j-1]) / (dy)**2
+    u_march = Parallel(n_jobs=-1)(
+        delayed(compute_march)(j, u_prev, v_prev, mut_prev, dp_dx, rho, mu, dy, dx)
+        for j in range(1, Ny-1)
+        )
 
-        visc_term = (mu + mut[i-1, j])*d2u_dy2 + (
-            (mut[i-1, j+1] - mut[i-1, j-1])/(2*dy)
-            ) * du_dy
-        
-        du_dx = (
-            (visc_term - dp_dx)/rho - v[i-1, j]*du_dy
-            )/u[i-1, j] if abs(u[i-1, j]) > 1e-8 else 0
-        
-        u[i, j] = u[i-1, j] + dx * du_dx
+    u[i, 1:Ny-1] = u_march
 
     u[i, 0] = 0             # No slip condition
     u[i, -1] = 1
@@ -78,7 +82,8 @@ for i in range(1, Nx):
         du_dx = (u[i, j] - u[i-1, j]) / dx
         v[i, j-1] = v[i, j] - dy * du_dx
 
-
+#21.3 22.2 21.3
+#19.1 18.6
 
 
 plt.figure()
