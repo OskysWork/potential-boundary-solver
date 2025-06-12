@@ -9,8 +9,8 @@ delta0 = 0.05
 L = 0.4 
 
 x = np.linspace(0, L, Nx)
-y = delta0 * (np.tanh(2 * np.linspace(0, 1, Ny)) / np.tanh(2))
-#y = np.linspace(0, delta0, Ny)
+#y = delta0 * (np.tanh(2 * np.linspace(0, 1, Ny)) / np.tanh(2))
+y = np.linspace(0, delta0, Ny)
 dx = x[1] - x[0]
 print(dx)
 dy = y[1] - y[0]
