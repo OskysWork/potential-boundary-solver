@@ -11,7 +11,7 @@ L = 0.02
 x = np.linspace(0, L, Nx)
 #y = np.linspace(0, delta0, Ny)
 y = np.linspace(0, 1, 80)**1.3
-y = y/y[-1] * delta0
+y = y * delta0
 dx = x[1] - x[0]
 #dy = y[1] - y[0]
 dy = [y[1] - y[0]] + [(y[i+1] - y[i-1]) / 2 for i in range(1, len(y)-1)] + [y[-1] - y[-2]]
@@ -23,7 +23,7 @@ print(dy[1]**2)
 rho = 1
 mu = 1.95*1e-5
 nu = mu / rho
-dp_dx = 0.01#0.01*1e5
+dp_dx = 0#-0.01*1e5
 
 u = np.zeros((Nx, Ny))
 v = np.zeros((Nx, Ny))
@@ -32,6 +32,7 @@ mut = np.zeros((Nx, Ny))
 tau_v = np.zeros((Nx, Ny))
 tau_t = np.zeros((Nx, Ny))
 dudy = np.zeros((Nx, Ny))
+#dudy_w = np.zeros
 kappa = 0.41
 
 count = 0
@@ -40,13 +41,13 @@ for j in range(Ny):
     eta = y[j]/delta0
     u[0, j] = 1.5 * eta - 0.5 * eta**3 if eta<1 else 1
 
-"""
+
 for j in range(Ny-1):
     dudy[0, j] = (u[0, j+1] - u[0, j-1]) / (2*dy[j])
 
 dudy[0, 0] = (u[0, 1] - u[0, 0]) / dy[0]
 dudy[0, -1] = (u[0, -1] - u[0, -2]) / dy[-1]
-"""
+
 
 for i in tqdm(range(1, Nx)):
     #delta = delta0 + 0.005 * x[i]     # Placeholder layer growth relation
@@ -56,8 +57,8 @@ for i in tqdm(range(1, Nx)):
 
 
     eta = y / delta
-    nut[i-1, :] = np.where(eta < 1, 0.01 * (eta*(1-eta)), 0)
-    #nut[i-1, :] = ((kappa*y)**2)*abs(dudy[i, :])
+    #nut[i-1, :] = np.where(eta < 1, 0.01 * (eta*(1-eta)), 0)
+    nut[i-1, :] = ((kappa*y)**2)*abs(dudy[i-1, :])
     mut[i-1, :] = rho * nut[i-1, :]
 
     for j in range(1, Ny-1):
@@ -69,14 +70,16 @@ for i in tqdm(range(1, Nx)):
         visc_term = (mu + mut[i-1, j])*d2u_dy2 + (
             (mut[i-1, j+1] - mut[i-1, j-1])/(2*dy[j])
             ) * du_dy
-        tau_v[i-1, j] = mu*d2u_dy2
-        tau_t[i-1, j] = mut[i-1, j]*d2u_dy2 + (
-            (mut[i-1, j+1] - mut[i-1, j-1])/(2*dy[j])
-            ) * du_dy
+        #tau_v[i-1, j] = mu*d2u_dy2
+        #tau_t[i-1, j] = mut[i-1, j]*d2u_dy2 + (
+        #    (mut[i-1, j+1] - mut[i-1, j-1])/(2*dy[j])
+        #    ) * du_dy
+        tau_v[i-1, j] = mu*du_dy
+        tau_t[i-1, j] = mut[i-1, j]*du_dy
         
         du_dx = (
             (visc_term - dp_dx)/rho - v[i-1, j]*du_dy
-            )/u[i-1, j] if abs(u[i-1, j]) > 1e-8 else 0
+            )/u[i-1, j] #if abs(u[i-1, j]) > 1e-8 else 0
         
         u[i, j] = u[i-1, j] + dx * du_dx
 
@@ -93,7 +96,7 @@ tau_w = mu*dudy_w
 u_tau = np.sqrt(tau_w / rho)
 
 y_plus = y*u_tau / nu
-x_plus = u[100, :] / u_tau
+u_plus = u[100, :] / u_tau
 
 
 plt.figure()
@@ -119,7 +122,21 @@ plt.legend()
 plt.show(block=False)
 
 plt.figure()
-plt.plot(y_plus, x_plus)
+plt.plot(nut[40000, :], y)
+plt.title(fr'Plot of $\nu_{{t}}$ for x=40000')
+plt.xlabel(fr'$\nu_{{t}}$')
+plt.ylabel('y+')
+plt.show(block=False)
+
+plt.figure()
+plt.plot(dudy[40000, :], y)
+plt.title(fr'Plot of du/dy for x=40000')
+plt.xlabel(fr'du/dy')
+plt.ylabel('y+')
+plt.show(block=False)
+
+plt.figure()
+plt.plot(y_plus, u_plus)
 plt.xscale('log')
 plt.title('Plot for x=100')
 plt.xlabel('y+')
@@ -127,14 +144,15 @@ plt.ylabel('u+')
 plt.show(block=False)
 
 plt.figure()
-plt.plot(y_plus, tau_v[40000], label=fr'$\tau_{{\nu}}$')
-plt.plot(y_plus, tau_t[40000], label=fr'$\tau_{{t}}$')
+plt.plot(y_plus, tau_v[40000, :], label=fr'$\tau_{{\nu}}$')
+plt.plot(y_plus, tau_t[40000, :], label=fr'$\tau_{{t}}$')
 plt.title(fr'$\tau_{{\nu}}$ and $\tau_{{t}}$ with $y^+$')
 plt.ylabel('Shear stresses')
 plt.xlabel(fr'$y^+$')
 plt.legend()
 plt.show()
 
+"""
 X, Y = np.meshgrid(x, y)
 plt.figure(figsize=(8, 4))
 plt.contourf(X, Y, u.T, levels=50, cmap="viridis")
@@ -144,4 +162,4 @@ plt.ylabel("y [m]")
 plt.title("Velocity field u(x, y)")
 plt.tight_layout()
 plt.show()
-
+"""
