@@ -6,10 +6,10 @@
 using namespace std;
 
 int main() {
-    const int Nx = 160000;
-    const int Ny = 80;
+    const int Nx = 160000*4;
+    const int Ny = 120;
     const double delta0 = 0.05;
-    const double L = 0.02;
+    const double L = 0.02*2;
     const double rho = 1;
     const double mu = 1.95e-5;
     const double nu = mu / rho;
@@ -38,6 +38,9 @@ int main() {
     for (int j=1; j < Ny-1; ++j) {
         dy[j] = (y[j+1] - y[j-1]) / 2;
     }
+
+    cout << "dx = " << dx << endl;
+    cout << "dy = " << dy[0] << endl;
 
     vector<vector<double>> u(Nx, vector<double>(Ny, 0));
     vector<vector<double>> v(Nx, vector<double>(Ny, 0));
@@ -115,18 +118,18 @@ int main() {
 //    }
 
     ofstream outfile("./boundary-layer.csv");
-    outfile << "y" << "," << "u[0]" << "," << "u[1000]" << "," << "u[10'000]" << ",";
-    outfile << "u[40'000]" << "," << "u[80'000]" << "," << "u[160'000]" << ",";
-    outfile << "y+" << "," << "u+" << endl;
+    outfile << "y" << "," << "u[0]" << "," << "u[10000]" << "," << "u[80000]" << ",";
+    outfile << "u[160000]" << "," << "u[320000]" << "," << "u[640000]" << ",";
+    outfile << "y+" << "," << "u+" << "," << "tau_v" << "," << "tau_t" << endl;
     for (int j = 0; j<Ny; ++j) {
         y_plus[j] = y[j] * u_tau / nu;
-        outfile << y[j] << "," << u[0][j] << "," << u[1000][j] << "," << u[10000][j] << ",";
-        outfile << u[40000][j] << "," << u[80000-1][j] << "," << u[160000-1][j] << ",";
-        outfile << y_plus[j] << "," << 0 << "," << endl;
+        outfile << y[j] << "," << u[0][j] << "," << u[10000][j] << "," << u[80000][j] << ",";
+        outfile << u[160000][j] << "," << u[320000-1][j] << "," << u[640000-1][j] << ",";
+        outfile << y_plus[j] << "," << 0 << "," << tau_v[640000-1][j] << "," << tau_t[640000-1][j] << endl;
     }
     outfile.close();
 
     cout << "Simulation complete. Data saved to boundary-layer.csv" << endl;
 
-    system("pause");
+    //system("pause");
 }
