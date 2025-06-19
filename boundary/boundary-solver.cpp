@@ -14,9 +14,10 @@ int main() {
     const double mu = 1.95e-5;
     const double nu = mu / rho;
     const double dp_dx = 0.0;
+    const double U_x = 1;
     const double kappa = 0.41;
 
-    const int yp_iter = 100;
+    const int yp_iter = 160000;
 
     int count = 0;
 
@@ -40,7 +41,7 @@ int main() {
     }
 
     cout << "dx = " << dx << endl;
-    cout << "dy = " << dy[0] << endl;
+    cout << "dy = " << pow(dy[0], 2) << endl;
 
     vector<vector<double>> u(Nx, vector<double>(Ny, 0));
     vector<vector<double>> v(Nx, vector<double>(Ny, 0));
@@ -89,8 +90,10 @@ int main() {
             u[i][j] = u[i-1][j] + dx * du_dx;
         }
 
+        dudy[i][0] = (u[i][1] - u[i][0]) / dy[0];       // Wall gradient
+
         u[i][0] = 0;        // No slip condition
-        u[i][Ny-1] = 1;     // Outer stream flow condition U(x) = 1
+        u[i][Ny-1] = U_x;     // Outer stream flow condition U(x) = 1
 
         v[i][Ny-1] = 0;
 
@@ -100,9 +103,14 @@ int main() {
         }
     }
 
-    double dudy_w = (u[yp_iter][1] - u[yp_iter][0]) / dy[0];
-    double tau_w = mu * dudy_w;
+    //double dudy_w = (u[yp_iter][1] - u[yp_iter][0]) / dy[0];
+    double tau_w = mu * dudy[yp_iter][0];
+    double cf = (2 * tau_w) / (rho * pow(U_x, 2));
+    cout << "dudy = " << dudy[yp_iter][0] << endl;
+    cout << "cf = " << cf << endl;
     double u_tau = sqrt(tau_w / rho);
+    double delta_v = nu / u_tau;
+    cout << "delta_v = " << delta_v << endl;
     
     vector<double> y_plus(Ny);
     vector<vector<double>> u_plus(Nx, vector<double>(Ny, 0.0));
@@ -120,12 +128,14 @@ int main() {
     ofstream outfile("./boundary-layer.csv");
     outfile << "y" << "," << "u[0]" << "," << "u[10000]" << "," << "u[80000]" << ",";
     outfile << "u[160000]" << "," << "u[320000]" << "," << "u[640000]" << ",";
-    outfile << "y+" << "," << "u+" << "," << "tau_v" << "," << "tau_t" << endl;
+    outfile << "y+" << "," << "u+" << "," << "tau_v[40000]" << "," << "tau_t[40000]" << ",";
+    outfile << "tau_v[640000]" << "," << "tau_t[640000]" << endl;
     for (int j = 0; j<Ny; ++j) {
         y_plus[j] = y[j] * u_tau / nu;
         outfile << y[j] << "," << u[0][j] << "," << u[10000][j] << "," << u[80000][j] << ",";
         outfile << u[160000][j] << "," << u[320000-1][j] << "," << u[640000-1][j] << ",";
-        outfile << y_plus[j] << "," << 0 << "," << tau_v[640000-1][j] << "," << tau_t[640000-1][j] << endl;
+        outfile << y_plus[j] << "," << 0 << "," << tau_v[40000][j] << "," << tau_t[40000][j] << ",";
+        outfile << tau_v[640000-1][j] << "," << tau_t[640000-1][j] << endl;
     }
     outfile.close();
 

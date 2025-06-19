@@ -15,10 +15,12 @@ u_320 = file['u[320000]'].tolist()
 u_640 = file['u[640000]'].tolist()
 u_plus = file['u+'].tolist()
 y_plus = file['y+'].tolist()
-tau_v = file['tau_v'].tolist()
-tau_t = file['tau_t'].tolist()
+tau_v = file['tau_v[40000]'].tolist()
+tau_t = file['tau_t[40000]'].tolist()
+tau_v_h = file['tau_v[640000]']
+tau_t_h = file['tau_t[640000]']
 
-print(u_160)
+print(y)
 
 print(file.columns.tolist())
 
@@ -37,5 +39,7 @@ plt.show(block=False)
 plt.figure()
 plt.plot(tau_v, y_plus, label='Tau_v')
 plt.plot(tau_t, y_plus, label='Tau_t')
+plt.plot(tau_v_h, y_plus, label='Tau_v_h')
+plt.plot(tau_t_h, y_plus, label='Tau_t_h')
 plt.legend()
 plt.show()

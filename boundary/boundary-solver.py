@@ -24,6 +24,7 @@ rho = 1
 mu = 1.95*1e-5
 nu = mu / rho
 dp_dx = 0#-0.01*1e5
+U_x = 1
 
 u = np.zeros((Nx, Ny))
 v = np.zeros((Nx, Ny))
@@ -84,7 +85,7 @@ for i in tqdm(range(1, Nx)):
         u[i, j] = u[i-1, j] + dx * du_dx
 
     u[i, 0] = 0             # No slip condition
-    u[i, -1] = 1
+    u[i, -1] = U_x
 
     v[i, -1] = 0
     for j in reversed(range(1, Ny)):
@@ -93,6 +94,7 @@ for i in tqdm(range(1, Nx)):
 
 dudy_w = (u[100, 1] - u[100, 0]) / dy[0]
 tau_w = mu*dudy_w
+cf = (2*tau_w) / (rho * U_x**2)
 u_tau = np.sqrt(tau_w / rho)
 
 y_plus = y*u_tau / nu
