@@ -13,7 +13,7 @@ int main() {
     const double rho = 1;
     const double mu = 1.95e-5;
     const double nu = mu / rho;
-    const double dp_dx = 0.0;
+    const double dp_dx = 0.10;
     const double U_x = 1;
     const double kappa = 0.41;
 
